@@ -4,16 +4,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
-  Dimensions
+  Dimensions,
+  TouchableNativeFeedback
 } from 'react-native'
 import Container from './Container'
 import Voice from './Voice'
 import VoiceButton from './VoiceButton'
 import Input from './Input'
+import { Icon } from '@ui-kitten/components'
 const { width } = Dimensions.get('window')
 
 export default class InputBar extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props)
     this.inputHeight = 0
   }
@@ -24,13 +26,13 @@ export default class InputBar extends PureComponent {
 
   renderIcon = () => {
     const { sendIcon, plusIcon, usePlus, messageContent, sendUnableIcon, ImageComponent } = this.props
-    const sendAbleIcon = sendIcon || <ImageComponent source={require('../../source/image/sendAble.png')} style={{ width: 30, height: 30 }} />
-    const sendUnableIconDefault = sendUnableIcon || <ImageComponent source={require('../../source/image/send.png')} style={{ width: 30, height: 30 }} />
+    const sendAbleIcon = sendIcon || <Icon pack={'material'} name={'send-lock-outline'} size={25} style={{ height: 25, width: 25, color: '#fff' }} />
+    const sendUnableIconDefault = sendUnableIcon ||  <Icon pack={'material'} name={'send-lock-outline'} size={25} style={{ height: 25, width: 25, color: '#fff' }} />
     if (usePlus) {
       if (messageContent.trim().length) {
         return sendAbleIcon
       } else {
-        return plusIcon || <ImageComponent source={require('../../source/image/more.png')} style={{ width: 30, height: 30 }} />
+        return plusIcon || <Icon pack={'feather'} name={'plus'} size={28} style={{ height: 28, width: 28, color: '#fff' }} />
       }
     } else {
       return messageContent.trim().length ? sendAbleIcon : sendUnableIconDefault
@@ -40,17 +42,17 @@ export default class InputBar extends PureComponent {
   renderEmojieIcon = () => {
     const { isEmojiShow, keyboardIcon, emojiIcon, ImageComponent } = this.props
     if (isEmojiShow) {
-      return keyboardIcon || <ImageComponent source={require('../../source/image/keyboard.png')} style={{ width: 30, height: 30 }} />
+      return keyboardIcon || <Icon pack={'material'} name={'keyboard'} size={25} style={{ height: 25, width: 25, color: '#4b4b4c' }} />
     } else {
-      return emojiIcon || <ImageComponent source={require('../../source/image/emoji.png')} style={{ width: 30, height: 30 }} />
+      return emojiIcon || <Icon pack={'simpleline'} name={'emotsmile'} size={25} style={{ height: 25, width: 25, color: '#4b4b4c' }} />
     }
   }
 
-  render () {
+  render() {
     const {
       messageContent,
-      onSubmitEditing = () => {},
-      textChange = () => {}, onMethodChange = () => {}, onContentSizeChange = () => {},
+      onSubmitEditing = () => { },
+      textChange = () => { }, onMethodChange = () => { }, onContentSizeChange = () => { },
       inputStyle,
       inputOutContainerStyle,
       inputContainerStyle,
@@ -100,57 +102,112 @@ export default class InputBar extends PureComponent {
         xHeight={xHeight}
         inputContainerStyle={inputContainerStyle}
       >
-        {
-          useVoice
-            ? <Voice
-              showVoice={showVoice}
-              ImageComponent={ImageComponent}
-              keyboardIcon={keyboardIcon}
-              voiceIcon={voiceIcon}
-              inputHeightFix={inputHeightFix}
-              onMethodChange={onMethodChange}
-            />
-            : null
-        }
-        <View style={styles.container}>
-          {showVoice
-            ? <VoiceButton
-              audioHasPermission={audioHasPermission}
-              inputHeight={this.inputHeight}
-              rootHeight={rootHeight}
-              showVoice={showVoice}
-              voiceStart={voiceStart}
-              isVoiceEnd={isVoiceEnd}
-              inputHeightFix={inputHeightFix}
-              pressOutText={pressOutText}
-              pressInText={pressInText}
-              voiceEnd={voiceEnd}
-              changeVoiceStatus={changeVoiceStatus}
-              />
-            : <Input
-              enabled={enabled}
-              onFocus={onFocus}
-              placeholder={placeholder}
-              onContentSizeChange={onContentSizeChange}
-              textChange={textChange}
-              messageContent={messageContent}
-              inputHeightFix={inputHeightFix}
-              inputChangeSize={inputChangeSize}
-              inputStyle={inputStyle}
-            />}
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.inputForm}>
           {
             useEmoji
-              ? <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => this.props.showEmoji()}
-                >
-                {this.renderEmojieIcon()}
-                </TouchableOpacity>
+              ?
+              <TouchableNativeFeedback activeOpacity={0.7} delayPressIn={0} onPress={() => {
+                this.props.showEmoji()
+              }}
+                background={TouchableNativeFeedback.Ripple('#c4c4c4', true)} >
+                <View style={{ alignItems: 'center', justifyContent: 'center', height: 30, width: 30, marginBottom: 7 }}>
+
+                { this.renderEmojieIcon() }
+
+                </View>
+              </TouchableNativeFeedback>
+
               : null
           }
-          <TouchableOpacity
+
+          <View style={styles.container}>
+
+            {showVoice
+              ? <VoiceButton
+                audioHasPermission={audioHasPermission}
+                inputHeight={this.inputHeight}
+                rootHeight={rootHeight}
+                showVoice={showVoice}
+                voiceStart={voiceStart}
+                isVoiceEnd={isVoiceEnd}
+                inputHeightFix={inputHeightFix}
+                pressOutText={pressOutText}
+                pressInText={pressInText}
+                voiceEnd={voiceEnd}
+                changeVoiceStatus={changeVoiceStatus}
+              />
+              : <>
+                <Input
+                  // enabled={enabled}
+                  onFocus={onFocus}
+                  placeholder={placeholder}
+                  onContentSizeChange={onContentSizeChange}
+                  textChange={textChange}
+                  messageContent={messageContent}
+                  inputHeightFix={inputHeightFix}
+                  inputChangeSize={inputChangeSize}
+                  inputStyle={inputStyle}
+                />
+              </>}
+
+          </View>
+
+          {messageContent.trim().length < 1 ? (
+            <>
+              <View style={{ flexDirection: 'row', alignSelf: "flex-end", marginBottom:6, marginRight: 6 }}>
+
+                <TouchableNativeFeedback delayPressIn={0} onPress={() => {
+                  // this.setState({ keyboadIsOpen: true })
+                }}
+                  background={TouchableNativeFeedback.Ripple('#c4c4c4', true)} >
+                  <View style={{ alignItems: 'center', justifyContent: 'center', height: 30, width: 30, }}>
+
+
+                    <View>
+                      <Icon pack={'simpleline'} name={'camera'} size={25} style={{ height: 25, width: 25, color: '#4b4b4c' }} />
+                    </View>
+
+
+                  </View>
+                </TouchableNativeFeedback>
+                <View style={{ width: 10 }}></View>
+
+                {
+                  useVoice
+                    ? <Voice
+                      showVoice={showVoice}
+                      ImageComponent={ImageComponent}
+                      keyboardIcon={keyboardIcon}
+                      voiceIcon={voiceIcon}
+                      inputHeightFix={inputHeightFix}
+                      onMethodChange={onMethodChange}
+                    />
+                    : null
+                }
+
+
+              </View>
+            </>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end' , marginBottom:6 }}>
+              <TouchableNativeFeedback delayPressIn={0} onPress={() => {
+                // this.setState({ keyboadIsOpen: true })
+              }}
+                background={TouchableNativeFeedback.Ripple('#c4c4c4', true)} >
+                <View style={{ alignItems: 'center', justifyContent: 'center', height: 30, width: 30, }}>
+                  <View>
+                    <Icon name={'attach-2-outline'} fill='#4b4b4c' size={25} style={{ height: 25, width: 25, color: '#4b4b4c' }} />
+                  </View>
+                </View>
+              </TouchableNativeFeedback>
+            </View>
+          )}
+
+        </View>
+        <View style={{ flexDirection: 'row', alignSelf: "flex-end", marginBottom:4 }}>
+
+          <TouchableNativeFeedback
+            background={TouchableNativeFeedback.Ripple('#c4c4c4', true)}
             style={{ marginLeft: 8 }}
             onPress={
               () => {
@@ -163,12 +220,14 @@ export default class InputBar extends PureComponent {
                     return null
                   }
                 }
-            }
+              }
             }
             activeOpacity={0.7}
           >
-            {this.renderIcon()}
-          </TouchableOpacity>
+            <View style={{ backgroundColor: '#2D8CFF', alignItems:'center', justifyContent:'center', borderRadius: 100, height:40, width:40 }}>
+              {this.renderIcon()}
+            </View>
+          </TouchableNativeFeedback>
         </View>
       </Container>
     )
@@ -178,18 +237,30 @@ export default class InputBar extends PureComponent {
 const styles = StyleSheet.create({
   commentBar: {
     width: width,
-    backgroundColor: '#f5f5f5',
+
     justifyContent: 'center',
-    borderColor: '#ccc',
-    borderTopWidth: StyleSheet.hairlineWidth
+    // borderColor: '#ccc',
+    // borderTopWidth: StyleSheet.hairlineWidth
+  },
+  inputForm: {
+    flexDirection: 'row',
+    backgroundColor: '#EDF1F7',
+    paddingVertical: 2,
+    paddingLeft: 10,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    marginHorizontal: 4,
+    alignItems: "flex-end",
+    flex: 1,
   },
   container: {
-    marginHorizontal: 8,
-    borderRadius: 18,
-    borderColor: '#ccc',
+    // marginHorizontal: 8,
+    // borderRadius: 18,
+    // borderColor: '#ccc',
     flex: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 0.8
+    // borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 0.8,
+    marginBottom: 2,
   },
   commentBar__input: {
     borderRadius: 18,

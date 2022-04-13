@@ -3,15 +3,17 @@ import { View, StyleSheet, Dimensions, Animated, Platform } from 'react-native'
 const { width, height } = Dimensions.get('window')
 import EmojiPanel from '../emoji'
 import PlusPanel from '../plus'
+
 export default class PanelContainer extends PureComponent {
   constructor (props) {
     super(props)
   }
 
   render () {
-    const { panelContainerHeight, visibleHeight, ImageComponent, panelHeight, emojiHeight, onEmojiSelected} = this.props
+    const { panelContainerHeight, panelPosition, visibleHeight, ImageComponent, panelHeight, emojiHeight, onEmojiSelected} = this.props
     return (
       <Animated.View
+        style={{ position:panelPosition, bottom:0 }}
       >
         {
           this.props.usePlus

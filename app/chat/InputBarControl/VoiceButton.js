@@ -59,8 +59,8 @@ class VoiceButton extends PureComponent {
         <TapGestureHandler
           onHandlerStateChange={(e) => this._onTab(e.nativeEvent)}
         >
-          <View style={{ borderRadius: 18, backgroundColor: isVoiceEnd ? '#bbb' : '#f5f5f5' }}>
-            <View style={[styles.container, { height: 35 + inputHeightFix }]}>
+          <View style={{ borderRadius: 18,  marginHorizontal:8, backgroundColor: isVoiceEnd ? '#ddd' : '#ddd' }}>
+            <View style={[styles.container, { height: 40 + inputHeightFix }]}>
               <Text style={styles.text}>{isVoiceEnd ? `${pressOutText}` : `${pressInText}`}</Text>
             </View>
           </View>

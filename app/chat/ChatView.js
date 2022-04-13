@@ -11,6 +11,7 @@ import {
   Clipboard,
   Dimensions,
   FlatList,
+  DeviceEventEmitter,
   ViewPropTypes as RNViewPropTypes
 } from 'react-native'
 import PropTypes from 'prop-types'
@@ -27,7 +28,7 @@ const { height, width } = Dimensions.get('window')
 const ViewPropTypes = RNViewPropTypes || View.propTypes
 let ImageComponent = Image
 class ChatWindow extends PureComponent {
-  constructor (props) {
+  constructor(props) {
     super(props)
     const { headerHeight, chatType, iphoneXBottomPadding, CustomImageComponent, isIPhoneX } = props
     this.time = null
@@ -57,6 +58,9 @@ class ChatWindow extends PureComponent {
       isPanelShow: false,
       isEmojiShow: false,
       saveChangeSize: 0,
+      keyboardHeight: 0,
+      normalHeight: 0,
+      shortHeight: 0,
       inputChangeSize: 0,
       voiceLength: 0,
       voiceEnd: false,
@@ -65,6 +69,7 @@ class ChatWindow extends PureComponent {
       selectMultiple: false,
       tabSelect: 0,
       modalTitle: '',
+      panelPosition:'relative',
       imageModalShow: false,
       imageSource: '',
       isSelfMessage: true,
@@ -78,22 +83,41 @@ class ChatWindow extends PureComponent {
     }
   }
 
-  async componentDidMount () {
+  async componentDidMount() {
     Platform.OS === 'ios' && this._willShow()
     Platform.OS === 'ios' && this._willHide()
     Platform.OS === 'android' && this._didShow()
     Platform.OS === 'android' && this._didHide()
+
+    let self = this;
+
+    DeviceEventEmitter.addListener('keyboardWillShow', function(e) {
+      console.log('WillShow====================================');
+      console.log(e);
+      console.log('====================================');
+      self.keyboardWillShow(e);
+    });
+
+    DeviceEventEmitter.addListener('keyboardWillHide', function(e) {
+        self.keyboardWillHide(e);
+    });
+
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     Platform.OS === 'ios' && this._willRemove()
     Platform.OS === 'android' && this._didRemove()
     this.time && clearTimeout(this.time)
   }
 
-  _willShow () {
+  _willShow() {
+
     this.keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
+
       const { panelShow, emojiShow } = this.state
+
+
+
       this.setState({ keyboardHeight: e.endCoordinates.height, xHeight: 0, keyboardShow: true })
       Animated.timing(this.visibleHeight, {
         duration: e.duration,
@@ -110,12 +134,13 @@ class ChatWindow extends PureComponent {
     })
   }
 
-  _willHide () {
+  _willHide() {
     this.keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', (e) => {
       const { emojiShow, panelShow } = this.state
       const { iphoneXBottomPadding } = this.props
       this.setState({ keyboardShow: false })
       if (emojiShow) {
+
         return this.showEmoji()
       }
       if (panelShow) {
@@ -131,22 +156,40 @@ class ChatWindow extends PureComponent {
     })
   }
 
-  _didShow () {
+  _didShow() {
     this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
-      this.setState({ keyboardShow: true })
-      // if (panelShow) {
-      //   return this.closePanel(true)
-      // }
-      // if (emojiShow) {
-      //   return this.closeEmoji(true)
-      // }
+
+      const { panelShow, emojiShow } = this.state
+      console.log('====================================');
+      console.log(emojiShow);
+      console.log('====================================');
+
+
+
+
+      if (panelShow) {
+        return this.closePanel(true)
+      }
+      if (emojiShow) {
+        return this.closeEmoji(true)
+      }
+
+      this.setState({
+        keyboardShow: true,
+        emojiShow:false,
+        isEmojiShow:false,
+        // panelPosition:'absolute',
+        keyboardHeight: e.endCoordinates.height,
+        normalHeight: Dimensions.get('window').height,
+        shortHeight: Dimensions.get('window').height - e.endCoordinates.height,
+      })
     })
   }
 
-  _didHide () {
+  _didHide() {
     this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', (e) => {
       const { emojiShow, panelShow } = this.state
-      this.setState({ keyboardShow: false })
+      this.setState({ keyboardShow: false,  panelPosition:'relative' })
       if (emojiShow) {
         return this.showEmoji()
       }
@@ -156,12 +199,12 @@ class ChatWindow extends PureComponent {
     })
   }
 
-  _willRemove () {
+  _willRemove() {
     this.keyboardWillShowListener.remove()
     this.keyboardWillHideListener.remove()
   }
 
-  _didRemove () {
+  _didRemove() {
     this.keyboardDidShowListener.remove()
     this.keyboardDidHideListener.remove()
   }
@@ -183,7 +226,7 @@ class ChatWindow extends PureComponent {
     }
   }
 
-  _changeMethod () {
+  _changeMethod() {
     this.setState({ showVoice: !this.state.showVoice },
       async () => {
         if (Platform.OS === 'android' && this.state.showVoice && !this.androidHasAudioPermission) {
@@ -208,15 +251,15 @@ class ChatWindow extends PureComponent {
     }
   }
 
-  _changeText (e) {
+  _changeText(e) {
     this.setState({ messageContent: e })
   }
 
-  _onContentSizeChange (e) {
+  _onContentSizeChange(e) {
     const { inverted } = this.props
     const changeHeight = e.nativeEvent.contentSize.height
     if (changeHeight === 34) return
-    this.setState({ inputChangeSize: changeHeight <= 70 ? changeHeight : 70 })
+    this.setState({ inputChangeSize: changeHeight <= 140 ? changeHeight : 140 })
     if (!inverted) {
       this.chatList && this.chatList.scrollToEnd({ animated: true })
     }
@@ -245,7 +288,7 @@ class ChatWindow extends PureComponent {
     this.closeAll()
   }
 
-  _scrollToBottom (listHeightAndWidth) {
+  _scrollToBottom(listHeightAndWidth) {
     const { inverted } = this.props
     if (listHeightAndWidth !== undefined) {
       const { contentHeight } = listHeightAndWidth
@@ -296,9 +339,9 @@ class ChatWindow extends PureComponent {
         useNativeDriver: false
       }),
       Animated.timing(this.panelHeight, {
-        duration: this.props.allPanelAnimateDuration,
+        duration: 0,
         toValue: 1,
-        easing: Easing.inOut(Easing.ease),
+        // easing: Easing.inOut(Easing.ease),
         useNativeDriver: false
       })
     ]).start(() => {
@@ -348,29 +391,36 @@ class ChatWindow extends PureComponent {
   }
 
   showEmoji = (callback) => {
-    this.setState({ xHeight: 0 })
+
+
+    const {keyboardHeight, normalHeight, shortHeight} = this.state
+
+    // this.setState({ xHeight: shortHeight, keyboardHeight:shortHeight })
+
     Animated.parallel([
-      Animated.timing(Platform.OS === 'ios' ? this.visibleHeight : this.paddingHeight, {
-        duration: this.props.allPanelAnimateDuration,
+      Animated.timing(this.emojiHeight, {
+        duration: 0,
         toValue: 1,
         useNativeDriver: false
       }),
+
       Animated.timing(this.emojiHeight, {
-        duration: this.props.allPanelAnimateDuration,
+        duration: 0,
         toValue: 1,
-        easing: Easing.inOut(Easing.ease),
+        // easing: Easing.in(Easing.ease),
         useNativeDriver: false
       })
+
     ]).start(() => {
-      this.setState({ emojiShow: true })
+      this.setState({ emojiShow: true , isEmojiShow:true})
       callback && callback()
     })
   }
 
   closeEmoji = (realClose = false, callback) => {
     Animated.parallel([
-      Animated.timing(Platform.OS === 'ios' ? this.visibleHeight : this.paddingHeight, {
-        duration: this.props.allPanelAnimateDuration,
+      Animated.timing(this.emojiHeight, {
+        duration: 0,
         toValue: realClose ? 0 : 1,
         useNativeDriver: false
       }),
@@ -378,7 +428,7 @@ class ChatWindow extends PureComponent {
         duration: this.props.allPanelAnimateDuration,
         toValue: 0,
         useNativeDriver: false,
-        easing: Easing.inOut(Easing.ease)
+        // easing: Easing.inOut(Easing.ease)
       })
     ]).start(() => {
       this.setState({ emojiShow: false })
@@ -387,9 +437,28 @@ class ChatWindow extends PureComponent {
   }
 
   tabEmoji = () => {
+
+    const {keyboardHeight, normalHeight, shortHeight} = this.state
+
+
+    console.log('====================================');
+    console.log(shortHeight);
+    console.log('====================================');
+
     const { keyboardShow, emojiShow, panelShow } = this.state
     const { showVoice } = this.state
+
+    // this.setState({
+    //   keyboardShow: false,
+    //   emojiShow: true,
+    //   // keyboardHeight: shortHeight,
+    //   // xHeight: keyboardHeight
+    // })
+
+
+
     if (Platform.OS === 'ios') {
+
       if (emojiShow) {
         return this.InputBar.input && this.InputBar.input.focus()
       }
@@ -402,8 +471,8 @@ class ChatWindow extends PureComponent {
         this.setState({
           keyboardShow: false,
           emojiShow: true,
-          keyboardHeight: 0,
-          xHeight: 0
+          keyboardHeight: shortHeight,
+          xHeight: keyboardHeight
         })
         this.InputBar.input && this.InputBar.input.blur()
       }
@@ -418,8 +487,11 @@ class ChatWindow extends PureComponent {
         if (!keyboardShow) {
           this.showEmoji()
         } else {
+          Keyboard.dismiss()
           this.setState({
             keyboardShow: false,
+            isEmojiShow:true,
+            panelPosition:'absolute',
             emojiShow: true
           })
           this.InputBar.input && this.InputBar.input.blur()
@@ -478,13 +550,13 @@ class ChatWindow extends PureComponent {
         } else {
           items = [
             {
-              title: '删除',
+              title: 'delete',
               onPress: () => {
                 this.props.delMessage({ index, message }, this.isInverted)
               }
             },
             {
-              title: '多选',
+              title: 'Multiple choice',
               onPress: () => {
                 this.multipleSelect(index, message)
               }
@@ -493,17 +565,17 @@ class ChatWindow extends PureComponent {
           if (type === 'text') {
             items = [
               {
-                title: '复制',
+                title: 'copy',
                 onPress: () => Clipboard.setString(text)
               },
               {
-                title: '删除',
+                title: 'delete',
                 onPress: () => {
                   this.props.delMessage({ index, message }, this.isInverted)
                 }
               },
               {
-                title: '多选',
+                title: 'Multiple choice',
                 onPress: () => {
                   this.multipleSelect(index, message)
                 }
@@ -674,15 +746,17 @@ class ChatWindow extends PureComponent {
     }
   }
 
-  render () {
+  render() {
     const { messageList, allPanelHeight, inverted, chatBackgroundImage, chatType, voiceCustom } = this.props
-    const { messageContent, voiceEnd, inputChangeSize, hasPermission, xHeight, keyboardHeight, keyboardShow, panelShow, emojiShow } = this.state
+    const { messageContent,panelPosition, voiceEnd, inputChangeSize, hasPermission, xHeight, keyboardHeight, keyboardShow, panelShow, emojiShow } = this.state
     const currentList = messageList.slice().sort((a, b) => inverted
       ? (b.time - a.time)
       : (a.time - b.time))
     const panelContainerHeight = allPanelHeight + (this.isIphoneX ? this.props.iphoneXBottomPadding : 0)
     return (
-      <View style={{ backgroundColor: this.props.containerBackgroundColor, flex: 1, position: 'relative' }} onLayout={(e) => this.rootHeight = e.nativeEvent.layout.height}>
+      <View style={{ backgroundColor: this.props.containerBackgroundColor, flex: 1, position: 'relative' }}
+      onLayout={(e) => this.rootHeight = e.nativeEvent.layout.height}>
+
         {this.renderBg(chatBackgroundImage)}
         <Animated.View style={Platform.OS === 'android' ? { flex: 1, backgroundColor: 'transparent' } : {
           backgroundColor: 'transparent',
@@ -825,7 +899,7 @@ class ChatWindow extends PureComponent {
                 inputContainerStyle={this.props.inputContainerStyle}
                 inputHeightFix={this.props.inputHeightFix}
                 audioHasPermission={this.androidHasAudioPermission}
-                />
+              />
               : null
           }
 
@@ -854,6 +928,7 @@ class ChatWindow extends PureComponent {
             usePlus={this.props.usePlus}
             useEmoji={this.props.useEmoji}
             panelHeight={this.panelHeight}
+            panelPosition={panelPosition}
             isIphoneX={this.isIphoneX}
             HeaderHeight={this.HeaderHeight}
             allPanelHeight={this.props.allPanelHeight}
@@ -895,7 +970,7 @@ class ChatWindow extends PureComponent {
                   voiceNoteText={this.props.voiceNoteText}
                   renderVoiceView={this.props.renderVoiceView}
                   voiceVolume={this.props.voiceVolume}
-                  />
+                />
                 : null
           }
         </Animated.View>
@@ -1065,15 +1140,15 @@ ChatWindow.defaultProps = {
     nickName: 'Test'
   },
   panelSource: [],
-  renderPanelRow: () => {},
-  onScroll: () => {},
+  renderPanelRow: () => { },
+  onScroll: () => { },
   renderErrorMessage: (messageStatus) => {
     switch (messageStatus) {
       case -1:
         return <View style={{ justifyContent: 'center', alignItems: 'center', marginHorizontal: 80, backgroundColor: '#e6e6e6', paddingVertical: 8, borderRadius: 4, marginBottom: 10 }}>
           <Text style={{ color: '#333', fontSize: 10 }}>好友关系异常，发送失败</Text>
         </View>
-      default :
+      default:
         return null
     }
   },
@@ -1090,9 +1165,9 @@ ChatWindow.defaultProps = {
         <Text style={{ color: '#333', fontSize: 10 }}>{getCurrentTime(parseInt(time))}</Text>
       </View>
     </View>,
-  placeholder: '请输入...',
-  pressInText: '按住 说话',
-  pressOutText: '送开 发送',
+  placeholder: 'please enter...',
+  pressInText: 'hold to speak',
+  pressOutText: 'send off send',
   changeHeaderLeft: () => {
     /* example */
     // this.props.navigation.setParams({
@@ -1139,28 +1214,28 @@ ChatWindow.defaultProps = {
   },
   audioPath: '',
   panelContainerBackgroundColor: '#f5f5f5',
-  audioOnProgress: () => {},
-  audioOnFinish: () => {},
-  audioInitPath: () => {},
-  audioRecord: () => {},
-  audioStopRecord: () => {},
-  audioPauseRecord: () => {},
-  audioResumeRecord: () => {},
+  audioOnProgress: () => { },
+  audioOnFinish: () => { },
+  audioInitPath: () => { },
+  audioRecord: () => { },
+  audioStopRecord: () => { },
+  audioPauseRecord: () => { },
+  audioResumeRecord: () => { },
   audioCurrentTime: 0,
   audioHandle: true,
-  setAudioHandle: () => {},
+  setAudioHandle: () => { },
   audioHasPermission: false,
-  checkPermission: () => {},
-  requestAndroidPermission: () => {},
-  voiceErrorText: '说话时间太短',
-  voiceCancelText: '松开手指取消发送',
-  voiceNoteText: '手指上划，取消发送',
+  checkPermission: () => { },
+  requestAndroidPermission: () => { },
+  voiceErrorText: 'Talk time is too short',
+  voiceCancelText: 'Release your finger to cancel sending',
+  voiceNoteText: 'Swipe up to cancel sending',
   voiceLoading: false,
   voicePlaying: false,
   voiceLeftLoadingColor: '#ccc',
   voiceRightLoadingColor: '#628b42',
   inputHeightFix: 0,
-  containerBackgroundColor: '#f5f5f5',
+  containerBackgroundColor: '#fff',
   showsVerticalScrollIndicator: false,
   showIsRead: false,
   voiceCustom: false

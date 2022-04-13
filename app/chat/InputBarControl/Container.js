@@ -22,7 +22,7 @@ class Container extends PureComponent {
         onLayout={(e) => setInputHeight(e.nativeEvent.layout.height)}
       >
         <View style={[{
-          flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 10
+          flexDirection: 'row', alignItems: 'center', marginVertical: 0, paddingHorizontal: 10
         }, inputContainerStyle]}
         >
           {children}
@@ -37,9 +37,10 @@ export default Container
 const styles = StyleSheet.create({
   commentBar: {
     width: width,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
+    marginBottom:10,
     borderColor: '#ccc',
-    borderTopWidth: StyleSheet.hairlineWidth
+    // borderTopWidth: StyleSheet.hairlineWidth
   }
 })

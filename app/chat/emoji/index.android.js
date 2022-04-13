@@ -4,6 +4,8 @@ import ViewPagerAndroid from '@react-native-community/viewpager';
 import ViewPagerAndroidContainer from '../components/android-container'
 import Control from './control'
 import { EMOJIS_DATA, DEFAULT_EMOJI } from '../../source/emojis'
+import EmojiInput from 'react-native-emoji-input'
+
 const { width, height } = Dimensions.get('window')
 
 export default class EmojiPanel extends PureComponent {
@@ -43,9 +45,28 @@ export default class EmojiPanel extends PureComponent {
         opacity: this.props.emojiHeight.interpolate({
           inputRange: [0, 1],
           outputRange: [0, 1]
-        })
+        }),
+
       }]} >
         <View style={{ height: panelContainerHeight, width }}>
+        <EmojiInput
+            ref={emojiInput => this._emojiInput = emojiInput}
+            categoryLabelTextStyle={{ fontSize: 13 }}
+            categoryFontSize={11}
+            categoryHighlightColor={'#ddd'}
+            renderAheadOffset={1000}
+            showCategoryTitleInSearchResults={true}
+            emojiFontSize={26}
+            keyboardBackgroundColor={'#E9E9E9'}
+            numColumns={8}
+            onBackSpacePress={() => {
+
+            }}
+            onEmojiSelected={(emoji) => {
+              // KeyboardRegistry.onItemSelected('EmojiKeyboardView', { emoji: emoji });
+            }}
+          />
+
           {/* 视图容器 */}
           {/* <ContainerComponent
             ref={e => { this.scroll = e }}
@@ -84,9 +105,9 @@ export default class EmojiPanel extends PureComponent {
               )
             }
           </ContainerComponent> */}
-          <View style={{ height: 30 }}>
+          {/* <View style={{ height: 30 }}>
             <Control index={this.state.pageIndex} total={this.total} />
-          </View>
+          </View> */}
           {/* <View style={{height: 40, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center'}}> */}
           {/* <View style={{width: 40, height: 40, backgroundColor: '#f9f9f9', justifyContent: 'center', alignItems: 'center', padding: 5}}> */}
           {/* /!*<Image source={defaultEmoji.default} style={{flex: 1}} resizeMode={'contain'} />*!/ */}
@@ -103,6 +124,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderColor: '#ccc',
-    overflow: 'hidden'
+    overflow: 'hidden',
   }
 })

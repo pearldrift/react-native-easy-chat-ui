@@ -11,7 +11,7 @@ class Input extends PureComponent {
     const { enabled, onFocus, placeholder, onContentSizeChange, textChange, messageContent, inputHeightFix, inputChangeSize, inputStyle } = this.props
     return (
       <TouchableOpacity
-        disabled={!enabled}
+        // disabled={!enabled}
         activeOpacity={1}
         onPress={() => {
           onFocus()
@@ -28,7 +28,7 @@ class Input extends PureComponent {
           underlineColorAndroid='transparent'
           onChangeText={textChange}
           value={messageContent}
-          style={[styles.commentBar__input, { height: Math.max(35 + inputHeightFix, inputChangeSize) }, inputStyle]}
+          style={[styles.commentBar__input, { height: Math.max(40 + inputHeightFix, inputChangeSize), maxHeight:140 }, inputStyle]}
         />
       </TouchableOpacity>
     )

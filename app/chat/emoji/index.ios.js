@@ -1,16 +1,16 @@
 import React, { PureComponent } from 'react'
 import { View, ScrollView, StyleSheet, Platform, Dimensions, Animated, TouchableOpacity } from 'react-native'
+import ViewPagerAndroid from '@react-native-community/viewpager';
 import ViewPagerAndroidContainer from '../components/android-container'
-import ViewPagerAndroid from '@react-native-community/viewpager'
 import Control from './control'
 import { EMOJIS_DATA, DEFAULT_EMOJI } from '../../source/emojis'
+import EmojiInput from 'react-native-emoji-input'
+
 const { width, height } = Dimensions.get('window')
 
 export default class EmojiPanel extends PureComponent {
   constructor (props) {
     super(props)
-    const { allPanelHeight, isIphoneX, iphoneXBottomPadding } = props
-    this.totalHeight = allPanelHeight + (isIphoneX ? iphoneXBottomPadding : 0)
     this.state = {
       pageIndex: 0
     }
@@ -19,12 +19,12 @@ export default class EmojiPanel extends PureComponent {
 
   switchComponent (e) {
     if (Platform.OS === 'ios') {
-      const { x } = e.nativeEvent.contentOffset
-      const cardIndex = Math.round(x / width)
+      let { x } = e.nativeEvent.contentOffset
+      let cardIndex = Math.round(x / width)
       if (x >= width / 2 && x < width / 2 + 10) this.scroll.scrollTo({ x: width * cardIndex, y: 0, animated: true })
       this.setState({ pageIndex: cardIndex })
     } else {
-      const { position, offset } = e.nativeEvent
+      let { position, offset } = e.nativeEvent
       if (offset === 0) {
         this.setState({ pageIndex: position })
       }
@@ -32,27 +32,42 @@ export default class EmojiPanel extends PureComponent {
   }
 
   render () {
-    const { panelContainerHeight, ImageComponent } = this.props
+    const { panelContainerHeight,  ImageComponent } = this.props
     const ContainerComponent = Platform.select({ ios: ScrollView, android: ViewPagerAndroid })
     this.total = 0
     return (
       <Animated.View style={[styles.container, {
-        position: 'absolute',
-        height: panelContainerHeight,
-        backgroundColor: '#f5f5f5',
-        bottom: this.props.emojiHeight.interpolate({
+        height: this.props.emojiHeight.interpolate({
           inputRange: [0, 1],
-          outputRange: [-panelContainerHeight, 0]
+          outputRange: [0, panelContainerHeight]
         }),
+        backgroundColor: '#f5f5f5',
         opacity: this.props.emojiHeight.interpolate({
           inputRange: [0, 1],
           outputRange: [0, 1]
         })
-      }]}
-      >
-        <ViewPagerAndroidContainer style={{ height: panelContainerHeight, width }}>
+      }]} >
+        <View style={{ height: panelContainerHeight, width }}>
+        <EmojiInput
+            ref={emojiInput => this._emojiInput = emojiInput}
+            categoryLabelTextStyle={{ fontSize: 13 }}
+            categoryFontSize={11}
+            categoryHighlightColor={'#ddd'}
+            // renderAheadOffset={1000}
+            showCategoryTitleInSearchResults={true}
+            emojiFontSize={26}
+            keyboardBackgroundColor={'#E9E9E9'}
+            numColumns={8}
+            onBackSpacePress={() => {
+
+            }}
+            onEmojiSelected={(emoji) => {
+              // KeyboardRegistry.onItemSelected('EmojiKeyboardView', { emoji: emoji });
+            }}
+          />
+
           {/* 视图容器 */}
-          <ContainerComponent
+          {/* <ContainerComponent
             ref={e => { this.scroll = e }}
             onScroll={(e) => this.switchComponent(e)}
             onPageScroll={(e) => this.switchComponent(e)}
@@ -67,7 +82,7 @@ export default class EmojiPanel extends PureComponent {
             {
               DEFAULT_EMOJI.map((item, index) => {
                 this.total += 1
-                return <View key={index} style={{ width, flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, marginTop: 18 }}>
+                return <View key={index} style={{ width, flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, marginTop: 18 }} >
                   {
                     item.map((list, i) =>
                       <TouchableOpacity
@@ -76,12 +91,11 @@ export default class EmojiPanel extends PureComponent {
                         style={{ width: (width - 40) / 8, height: 45, justifyContent: 'center', alignItems: 'center', paddingTop: 15, paddingHorizontal: 20 }}
                         onPress={() => {
                           this.props.onPress(list.value)
-                        }}
+                        }
+                        }
                       >
-                        <ImageComponent
-                          source={list.value === '/{del}' ? require('../../source/emojis/ic_emoji_del.png') : EMOJIS_DATA[list.value]}
-                          resizeMode='contain' style={{ width: 30, height: 30 }}
-                        />
+                        <ImageComponent source={list.value === '/{del}' ? require('../../source/emojis/ic_emoji_del.png') : EMOJIS_DATA[list.value]}
+                          resizeMode={'contain'} style={{ width: 30, height: 30 }} />
                       </TouchableOpacity>
                     )
                   }
@@ -89,16 +103,16 @@ export default class EmojiPanel extends PureComponent {
               }
               )
             }
-          </ContainerComponent>
-          <View style={{ height: 40 }}>
+          </ContainerComponent> */}
+          {/* <View style={{ height: 30 }}>
             <Control index={this.state.pageIndex} total={this.total} />
-          </View>
+          </View> */}
           {/* <View style={{height: 40, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center'}}> */}
           {/* <View style={{width: 40, height: 40, backgroundColor: '#f9f9f9', justifyContent: 'center', alignItems: 'center', padding: 5}}> */}
           {/* /!*<Image source={defaultEmoji.default} style={{flex: 1}} resizeMode={'contain'} />*!/ */}
           {/* </View> */}
           {/* </View> */}
-        </ViewPagerAndroidContainer>
+        </View>
       </Animated.View>
     )
   }
